@@ -1,0 +1,32 @@
+name: Build
+description: Builds a zip archive from a solution directory using the Joule Studio CLI.
+
+inputs:
+  path:
+    description: Path to the solution directory to zip. Defaults to the repository root.
+    required: false
+    default: ${{ github.workspace }}
+
+outputs:
+  solutionZip:
+    description: Path to the created zip file
+    value: ${{ steps.build.outputs.solutionZip }}
+
+runs:
+  using: composite
+  steps:
+    - name: Build solution zip
+      id: build
+      shell: bash
+      env:
+        SOLUTION_PATH: ${{ inputs.path }}
+      run: |
+        cd "$SOLUTION_PATH"
+        output=$(jl solution build 2>&1)
+        echo "$output"
+        zip_file=$(echo "$output" | grep "Location:" | sed 's/.*Location: //')
+        if [[ -z "$zip_file" ]]; then
+          echo "Error: could not determine zip file location from jl output"
+          exit 1
+        fi
+        echo "solutionZip=$SOLUTION_PATH/$zip_file" >> $GITHUB_OUTPUT
