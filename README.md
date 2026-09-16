@@ -1,41 +1,44 @@
-# SAP-samples/repository-template
-This default template for SAP Samples repositories includes files for README, LICENSE, and REUSE.toml. All repositories on github.com/SAP-samples will be created based on this template.
+# lifecycle-operations-for-joule-studio
 
-# Containing Files
+This repository contains the reference pipeline configurations and setup guides for promoting Joule Studio solutions to production via a git provider.
 
-1. The LICENSE file:
-In most cases, the license for SAP sample projects is `Apache 2.0`.
+When a developer is ready to deploy a solution to a productive environment, Joule Studio uses a CI/CD pipeline as the deliberate approval gate. The developer pushes their solution to a connected git repository, and an administrator manually triggers the pipeline to perform the deployment. This repository provides the reference files that Joule Studio pushes into each connected repository, along with step-by-step setup instructions for each supported git provider.
 
-2. The REUSE.toml file: 
-The [Reuse Tool](https://reuse.software/) must be used for your samples project. You can find the REUSE.toml in the project initial. Please replace the parts inside the single angle quotation marks < > by the specific information for your repository.
+## Supported Git Providers
 
-3. The README.md file (this file):
-Please edit this file as it is the primary description file for your project. You can find some placeholder titles for sections below.
+| Provider | Folder | Pipeline file |
+|---|---|---|
+| GitHub | [github/](github/) | `.github/workflows/deploy.yml` |
+| GitLab | [gitlab/](gitlab/) | `deploy.yml` |
+| Azure DevOps | [azure/](azure/) | `deploy.yml` |
+| Bitbucket | [bitbucket/](bitbucket/) | `bitbucket-pipelines.yml` |
 
-# [Title]
-<!-- Please include descriptive title -->
+## Setup
 
-<!--- Register repository https://api.reuse.software/register, then add REUSE badge:
-[![REUSE status](https://api.reuse.software/badge/github.com/SAP-samples/REPO-NAME)](https://api.reuse.software/info/github.com/SAP-samples/REPO-NAME)
--->
+Each provider folder contains a `SETUP.md` with end-to-end instructions:
 
-## Description
-<!-- Please include SEO-friendly description -->
+- [GitHub Setup](github/SETUP.md)
+- [GitLab Setup](gitlab/SETUP.md)
+- [Azure DevOps Setup](azure/SETUP.md)
+- [Bitbucket Setup](bitbucket/SETUP.md)
 
-## Requirements
+All providers follow the same high-level flow:
 
-## Download and Installation
+1. Establish trust between SAP Cloud Identity Services (SCI) and the git provider using OIDC or client credentials.
+2. Configure the required CI/CD variables (`SCI_TENANT_URL`, `SCI_CLIENT_ID`, `JOULE_STUDIO_URL`, and provider-specific variables).
+3. Connect your Joule Studio solution to the repository and push — the pipeline files are included automatically.
+4. Manually trigger the pipeline to deploy the solution to the productive environment.
 
-## Known Issues
-<!-- You may simply state "No known issues. -->
+## Authentication model
 
-## How to obtain support
-[Create an issue](https://github.com/SAP-samples/<repository-name>/issues) in this repository if you find a bug or have questions about the content.
- 
-For additional support, [ask a question in SAP Community](https://answers.sap.com/questions/ask.html).
+Each provider uses a keyless or low-secret authentication approach where possible:
 
-## Contributing
-If you wish to contribute code, offer fixes or improvements, please send a pull request. Due to legal reasons, contributors will be asked to accept a DCO when they create the first pull request to this project. This happens in an automated fashion during the submission process. SAP uses [the standard DCO text of the Linux Foundation](https://developercertificate.org/).
+- **GitHub** and **GitLab** use OAuth 2.0 client credentials — a client ID and client secret are stored as secured repository variables and exchanged for an SCI access token.
+- **Azure DevOps** uses OAuth 2.0 client credentials — a client ID and client secret are stored as secured repository variables and exchanged for an SCI access token.
+- **Bitbucket** uses OAuth 2.0 client credentials — a client ID and client secret are stored as secured repository variables and exchanged for an SCI access token.
 
-## License
-Copyright 2026 SAP SE or an SAP affiliate company and lifecycle-operations-for-joule-studio contributors. Please see our [LICENSE](LICENSE) for copyright and license information. Detailed information including third-party components and their licensing/copyright information is available [via the REUSE tool](https://api.reuse.software/info/github.com/SAP-samples/lifecycle-operations-for-joule-studio).
+## Related resources
+
+- [Joule Studio Deployment Guide](https://help.sap.com/docs/business-ai-platform/joule-studio/deployment)
+- [Joule Studio Provisioning](https://help.sap.com/docs/business-ai-platform/joule-studio/provisioning)
+- [SAP Cloud Identity Services Documentation](https://help.sap.com/docs/identity-authentication)
