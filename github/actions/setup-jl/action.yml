@@ -1,0 +1,19 @@
+name: Setup Joule Studio CLI
+description: Installs Node.js and the Joule Studio developer CLI tool.
+
+inputs:
+  npm-registry:
+    description: The npm registry to use for installing the Joule Studio CLI.
+    default: https://registry.npmjs.org/
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "24"
+
+    - name: Install Joule Studio CLI
+      shell: bash
+      run: npm install -g @sap/joule-work-dev-cli-early-adopters@prerelease --registry ${{ inputs.npm-registry }} --prefer-online

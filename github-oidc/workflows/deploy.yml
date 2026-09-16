@@ -1,0 +1,35 @@
+name: Deploy to Joule Studio
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # This is required for requesting the JWT
+      contents: read # This is required for actions/checkout
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Joule Studio CLI
+        uses: ./.github/actions/setup-jl
+
+      - name: Fetch SCI token
+        id: fetch-token
+        uses: ./.github/actions/token-fetch
+        with:
+          sciTenantUrl: ${{ secrets.SCI_TENANT_URL }}
+          sciClientId: ${{ secrets.SCI_CLIENT_ID }}
+
+      - name: Build solution
+        id: build-solution
+        uses: ./.github/actions/build
+
+      - name: Deploy solution
+        uses: ./.github/actions/deploy
+        with:
+          sciToken: ${{ steps.fetch-token.outputs.sciToken }}
+          jouleStudioUrl: ${{ secrets.JOULE_STUDIO_URL }}
+          solutionZip: ${{ steps.build-solution.outputs.solutionZip }}

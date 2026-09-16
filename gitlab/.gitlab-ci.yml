@@ -1,0 +1,67 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - when: never
+
+variables:
+  NPM_REGISTRY: "https://registry.npmjs.org/"
+  JL_PACKAGE: "@sap/joule-work-dev-cli-early-adopters@prerelease"
+
+stages:
+  - setup
+  - fetch-token
+  - build
+  - deploy
+
+setup-cli:
+  stage: setup
+  image: node:20
+  script:
+    - npm install -g $JL_PACKAGE --registry $NPM_REGISTRY
+    - jl version
+  cache:
+    key: jl-cli
+    paths:
+      - /usr/local/lib/node_modules/
+      - /usr/local/bin/jl
+
+fetch-token:
+  stage: fetch-token
+  image: python:3.12-slim
+  script:
+    - python .gitlab/scripts/fetch.py
+  artifacts:
+    reports:
+      dotenv: token.env
+
+build-solution:
+  stage: build
+  image: node:20
+  cache:
+    key: jl-cli
+    paths:
+      - /usr/local/lib/node_modules/
+      - /usr/local/bin/jl
+    policy: pull
+  script:
+    - npm install -g $JL_PACKAGE --registry $NPM_REGISTRY
+    - jl solution build
+
+deploy-solution:
+  stage: deploy
+  image: node:20
+  cache:
+    key: jl-cli
+    paths:
+      - /usr/local/lib/node_modules/
+      - /usr/local/bin/jl
+    policy: pull
+  needs:
+    - job: fetch-token
+      artifacts: true
+    - job: build-solution
+  script:
+    - npm install -g $JL_PACKAGE --registry $NPM_REGISTRY
+    - export JOULE_STUDIO_HOST="$JOULE_STUDIO_URL"
+    - export JOULE_STUDIO_TOKEN="$SCI_TOKEN"
+    - jl solution deploy --force

@@ -1,0 +1,30 @@
+name: Fetch SCI Token
+description: Exchanges SAP Cloud Identity Services client credentials for a short-lived access token.
+
+inputs:
+  sciTenantUrl:
+    description: Issuer URI of the SAP Cloud Identity Services tenant
+    required: true
+  sciClientId:
+    description: Client ID of the SCI application
+    required: true
+  sciClientSecret:
+    description: Client secret of the SCI application
+    required: true
+
+outputs:
+  sciToken:
+    description: The Cloud Identity Services access token
+    value: ${{ steps.get-sci-token.outputs.sciToken }}
+
+runs:
+  using: composite
+  steps:
+    - name: Get SCI token
+      id: get-sci-token
+      shell: bash
+      env:
+        SCI_TENANT_URL: ${{ inputs.sciTenantUrl }}
+        SCI_CLIENT_ID: ${{ inputs.sciClientId }}
+        SCI_CLIENT_SECRET: ${{ inputs.sciClientSecret }}
+      run: python $GITHUB_ACTION_PATH/fetch.py

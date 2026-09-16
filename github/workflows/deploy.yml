@@ -1,0 +1,49 @@
+# Deploy to Joule Studio
+# Trigger manually from GitHub UI: Actions > Deploy to Joule Studio > Run workflow
+#
+# Required organization secrets (Settings > Secrets and variables > Actions > Secrets):
+#   SCI_TENANT_URL   - Issuer URI of the SAP Cloud Identity Services tenant
+#   SCI_CLIENT_ID    - Client ID of the SCI application
+#   JOULE_STUDIO_URL - Base URL of the Joule Studio solution handling API
+#   SCI_CLIENT_SECRET - Client secret of the SCI application
+#
+# Setup:
+#   1. This file is pushed automatically by Joule Studio when you push your solution
+#   2. Set the required organization secrets listed above
+#   3. Grant this repository access to each organization secret
+#   4. Complete the SCI client credentials configuration described in SETUP.md
+
+name: Deploy to Joule Studio
+
+on:
+  workflow_dispatch:  # manual trigger only
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Joule Studio CLI
+        uses: ./.github/actions/setup-jl
+
+      - name: Fetch SCI token via client secret
+        id: fetch-token
+        uses: ./.github/actions/token-fetch
+        with:
+          sciTenantUrl: ${{ secrets.SCI_TENANT_URL }}
+          sciClientId: ${{ secrets.SCI_CLIENT_ID }}
+          sciClientSecret: ${{ secrets.SCI_CLIENT_SECRET }}
+
+      - name: Build solution
+        uses: ./.github/actions/build
+
+      - name: Deploy solution
+        uses: ./.github/actions/deploy
+        with:
+          sciToken: ${{ steps.fetch-token.outputs.sciToken }}
+          jouleStudioUrl: ${{ secrets.JOULE_STUDIO_URL }}

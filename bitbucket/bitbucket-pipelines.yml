@@ -1,0 +1,88 @@
+image: nikolaik/python-nodejs:python3.12-nodejs24-bookworm
+
+pipelines:
+  custom:
+    deploy-to-joule-studio:
+      - step:
+          name: Deploy to Joule Studio
+          caches:
+            - node
+          script:
+            # Install Joule Studio CLI
+            - npm install -g @sap/joule-work-dev-cli-early-adopters@prerelease
+
+            # Get SCI token, build solution, and deploy
+            - |
+              set -euo pipefail
+              umask 077
+
+              # Validate required Bitbucket variables
+              : "${SCI_TENANT_URL:?SCI_TENANT_URL is required}"
+              : "${SCI_CLIENT_ID:?SCI_CLIENT_ID is required}"
+              : "${SCI_CLIENT_SECRET:?SCI_CLIENT_SECRET is required}"
+              : "${JOULE_STUDIO_URL:?JOULE_STUDIO_URL is required}"
+              : "${BITBUCKET_CLONE_DIR:?BITBUCKET_CLONE_DIR is required}"
+
+              SOLUTION_PATH="${SOLUTION_PATH:-$BITBUCKET_CLONE_DIR}"
+
+              echo "SCI configuration is available."
+              echo "Solution path: $SOLUTION_PATH"
+
+              if [ ! -d "$SOLUTION_PATH" ]; then
+                echo "Solution directory does not exist: $SOLUTION_PATH"
+                exit 1
+              fi
+
+              # Request a short-lived SCI access token via the Python script.
+              # It writes token.env (SCI_TOKEN=...); the token is never printed.
+              SCI_TOKEN_ENV="$BITBUCKET_CLONE_DIR/token.env"
+              trap 'rm -f "$SCI_TOKEN_ENV"' EXIT
+
+              cd "$BITBUCKET_CLONE_DIR"
+              python3 "$BITBUCKET_CLONE_DIR/.bitbucket/scripts/fetch.py"
+
+              SCI_TOKEN="$(grep '^SCI_TOKEN=' "$SCI_TOKEN_ENV" | cut -d= -f2-)"
+
+              rm -f "$SCI_TOKEN_ENV"
+              trap - EXIT
+
+              if [ -z "$SCI_TOKEN" ]; then
+                echo "SCI access token is empty"
+                exit 1
+              fi
+
+              # Enter the directory containing solution.yaml
+              cd "$SOLUTION_PATH"
+
+              if [ ! -f "solution.yaml" ]; then
+                echo "solution.yaml was not found in: $SOLUTION_PATH"
+                exit 1
+              fi
+
+              # Build solution and extract zip file location
+              echo "Building solution..."
+              output=$(jl solution build 2>&1)
+              echo "$output"
+              zip_file=$(echo "$output" | grep "Location:" | sed 's/.*Location: //')
+              if [ -z "$zip_file" ]; then
+                echo "Error: could not determine zip file location from jl output"
+                exit 1
+              fi
+              echo "Solution zip created: $zip_file"
+
+              # Configure Joule Studio CLI authentication
+              export JOULE_STUDIO_TOKEN="$SCI_TOKEN"
+              export JOULE_STUDIO_HOST="$JOULE_STUDIO_URL"
+
+              echo "Deploying solution to Joule Studio..."
+
+              # Current CLI builds and deploys the solution from the current directory.
+              if ! jl solution deploy --force; then
+                echo "Joule Studio deployment failed."
+                exit 1
+              fi
+
+              echo "Solution deployed successfully."
+
+              unset SCI_TOKEN
+              unset JOULE_STUDIO_TOKEN

@@ -1,0 +1,151 @@
+# =============================================================================
+# azure-pipelines-client-credentials.yml — Deploy Joule Studio Solution
+# =============================================================================
+# Uses OAuth 2.0 client credentials (client_id + client_secret) for auth.
+# Simpler setup than ARM Workload Identity Federation, but requires storing
+# a long-lived client secret.
+#
+# Flow:
+#   1. Checkout repository
+#   2. Setup Node.js 24 + install Joule Studio CLI (jl)
+#   3. Exchange client_id + client_secret for IAS access token
+#   4. Build solution zip via `jl solution build`
+#   5. Deploy via `jl solution deploy --force`
+#
+# Trigger: manual only
+#
+# Required variables (set at organization or project level):
+#   SCI_TENANT_URL           - IAS tenant URL
+#   SCI_CLIENT_ID            - IAS application client ID
+#   SCI_CLIENT_SECRET        - IAS application client secret (mark as secret)
+#   JOULE_STUDIO_URL         - Joule Studio Deploy Service URL
+#
+# Reference: https://github.com/SAP-samples/lifecycle-operations-for-joule-studio
+# =============================================================================
+
+trigger: none
+pr: none
+
+variables:
+  - group: joule-studio-config
+  - name: SOLUTION_PATH
+    value: "$(Build.SourcesDirectory)"
+
+pool:
+  vmImage: "ubuntu-latest"
+
+jobs:
+  - job: DeployToProd
+    displayName: "Deploy Solution to Production"
+    timeoutInMinutes: 15
+    steps:
+      # =====================================================================
+      # Step 1: Checkout repository
+      # =====================================================================
+      - checkout: self
+        displayName: "Checkout repository"
+
+      # =====================================================================
+      # Step 2: Setup Node.js 24
+      # =====================================================================
+      - task: NodeTool@0
+        inputs:
+          versionSpec: "24.x"
+        displayName: "Setup Node.js 24"
+
+      # =====================================================================
+      # Step 3: Install Joule Studio CLI
+      # =====================================================================
+      - script: npm install -g @sap/joule-work-dev-cli-early-adopters@prerelease
+        displayName: "Install Joule Studio CLI"
+
+      # =====================================================================
+      # Step 4: Get IAS access token via client credentials
+      # =====================================================================
+      - script: |
+          set -euo pipefail
+
+          echo "=== Exchange client credentials for IAS token ==="
+
+          # Validate required variables
+          : "${SCI_TENANT_URL:?SCI_TENANT_URL is required}"
+          : "${SCI_CLIENT_ID:?SCI_CLIENT_ID is required}"
+          : "${SCI_CLIENT_SECRET:?SCI_CLIENT_SECRET is required}"
+
+          IAS_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "${SCI_TENANT_URL}/oauth2/token" \
+            -H "Accept: application/json" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=client_credentials" \
+            -d "client_id=${SCI_CLIENT_ID}" \
+            -d "client_secret=${SCI_CLIENT_SECRET}" \
+            -d "resource=urn:sap:identity:application:provider:name:build")
+
+          HTTP_CODE=$(echo "$IAS_RESPONSE" | tail -n1)
+          BODY=$(echo "$IAS_RESPONSE" | sed '$d')
+
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            ERROR_MSG=$(echo "$BODY" | jq -r '.error // empty')
+            ERROR_DESC=$(echo "$BODY" | jq -r '.error_description // empty')
+            if [ -n "$ERROR_MSG" ]; then
+              echo "##vso[task.logissue type=error]IAS token exchange failed (HTTP $HTTP_CODE): $ERROR_MSG - $ERROR_DESC"
+            else
+              echo "##vso[task.logissue type=error]IAS token exchange failed (HTTP $HTTP_CODE)"
+            fi
+            exit 1
+          fi
+
+          IAS_TOKEN=$(echo "$BODY" | jq -r '.access_token // empty')
+          if [ -z "$IAS_TOKEN" ]; then
+            echo "##vso[task.logissue type=error]IAS access_token missing in response"
+            exit 1
+          fi
+
+          echo "✓ IAS token obtained (length: ${#IAS_TOKEN})"
+          echo "##vso[task.setvariable variable=IAS_ACCESS_TOKEN;issecret=true]$IAS_TOKEN"
+        displayName: "Get IAS token via client credentials"
+        env:
+          SCI_TENANT_URL: $(SCI_TENANT_URL)
+          SCI_CLIENT_ID: $(SCI_CLIENT_ID)
+          SCI_CLIENT_SECRET: $(SCI_CLIENT_SECRET)
+
+      # =====================================================================
+      # Step 5: Deploy solution to Joule Studio
+      # =====================================================================
+      - script: |
+          set -euo pipefail
+
+          # Validate required variables
+          : "${JOULE_STUDIO_URL:?JOULE_STUDIO_URL is required}"
+          : "${IAS_ACCESS_TOKEN:?IAS_ACCESS_TOKEN is required}"
+
+          export JOULE_STUDIO_HOST="${JOULE_STUDIO_URL}"
+          export JOULE_STUDIO_TOKEN="${IAS_ACCESS_TOKEN}"
+
+          cd "$(SOLUTION_PATH)"
+
+          if [ ! -f "solution.yaml" ]; then
+            echo "##vso[task.logissue type=error]solution.yaml not found"
+            exit 1
+          fi
+
+          if [ ! -f ".build" ]; then
+            echo "##vso[task.logissue type=error].build file not found - required for deployment"
+            exit 1
+          fi
+
+          echo "Deploying solution to Joule Studio..."
+
+          if ! jl solution deploy --force; then
+            echo "##vso[task.logissue type=error]Joule Studio deployment failed"
+            exit 1
+          fi
+
+          echo "Solution deployed successfully"
+
+          unset IAS_ACCESS_TOKEN
+          unset JOULE_STUDIO_TOKEN
+        displayName: "Deploy solution to Joule Studio"
+        env:
+          JOULE_STUDIO_URL: $(JOULE_STUDIO_URL)
+          IAS_ACCESS_TOKEN: $(IAS_ACCESS_TOKEN)

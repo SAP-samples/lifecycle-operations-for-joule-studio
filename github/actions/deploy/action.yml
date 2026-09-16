@@ -1,0 +1,27 @@
+name: Deploy
+description: Deploys a solution directory to Joule Studio using the Joule Studio CLI.
+
+inputs:
+  sciToken:
+    description: The Cloud Identity Services access token
+    required: true
+  path:
+    description: Path to the solution directory. Defaults to the repository root.
+    required: false
+    default: ${{ github.workspace }}
+  jouleStudioUrl:
+    description: Base URL of the Joule Studio CLI API
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Deploy solution
+      shell: bash
+      env:
+        JOULE_STUDIO_TOKEN: ${{ inputs.sciToken }}
+        JOULE_STUDIO_HOST: ${{ inputs.jouleStudioUrl }}
+        SOLUTION_PATH: ${{ inputs.path }}
+      run: |
+        cd "$SOLUTION_PATH"
+        jl solution deploy --force
