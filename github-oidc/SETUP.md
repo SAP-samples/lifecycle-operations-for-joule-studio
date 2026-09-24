@@ -96,7 +96,7 @@ Before running the pipeline, you need to add the following files to your reposit
 ```
 
 > **Reference:** A reference copy of the pipeline configuration is maintained in an external repository:
-> `https://github.com/SAP-samples/lifecycle-operations-for-joule-studio`
+> `https://github.com/SAP-samples/lifecycle-operations-for-joule-studio/tree/main/github-oidc`
 
 ### Configure a Repository-Level Custom Subject
 
