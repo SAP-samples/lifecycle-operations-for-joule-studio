@@ -137,10 +137,6 @@ You can find reference templates for these files in the repository linked below.
 
 Once the pipeline completes successfully, the solution is live in the productive environment.
 
-### Multi-System Landscapes
-
-By default, the pipeline deploys the solution to a single backend system. To deploy to multiple backend systems of different types (for example, both an S/4HANA Cloud system and an Ariba system), use the `TARGET_SYSTEMS` variable to specify the target system ID for each system type. Set the `TARGET_SYSTEMS` variable (see [Optional Variables](#optional-variables)) to a JSON object that maps each system type to the desired system ID.
-
 ### Pipeline Structure
 **Build and deploy to Joule Studio** performs the following in order:
 
