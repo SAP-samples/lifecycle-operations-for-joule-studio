@@ -64,4 +64,7 @@ deploy-solution:
     - npm install -g $JL_PACKAGE --registry $NPM_REGISTRY
     - export JOULE_STUDIO_HOST="$JOULE_STUDIO_URL"
     - export JOULE_STUDIO_TOKEN="$SCI_TOKEN"
-    - jl solution deploy --force
+    - DEPLOY_CMD="jl solution deploy --force"
+    - if [ -n "$TARGET_SYSTEMS" ]; then DEPLOY_CMD="$DEPLOY_CMD --systems \"$TARGET_SYSTEMS\""; fi
+    - echo "Deployment Running:\ $DEPLOY_CMD"
+    - $DEPLOY_CMD
