@@ -8,8 +8,7 @@
 #   SCI_CLIENT_SECRET  - Client secret of the SCI application
 #
 # Optional variables (Settings > Secrets and variables > Actions > Variables):
-#   TARGET_SYSTEMS     - JSON object mapping system type to system ID
-#                        for multi-system landscapes, e.g. '{ "S/4HANA Cloud": "ABC123" }'
+#   TARGET_SYSTEMS     - JSON object mapping system type to system ID for multi-system landscapes
 #
 # Setup:
 #   1. This file is pushed automatically by Joule Studio when you push your solution

@@ -96,7 +96,7 @@ Optionally, set the following values under **Settings > Secrets and variables > 
 
 | Variable | Description |
 |---|---|
-| `TARGET_SYSTEMS` | JSON object mapping system type to system ID for multi-system landscapes, e.g. `{ "S/4HANA Cloud": "ABC123", "Ariba": "XYZ123" }`. Omit for single-system tenants. See [Multi-System Landscapes](#multi-system-landscapes). |
+| `TARGET_SYSTEMS` | JSON object mapping system type to system ID for multi-system landscapes. Omit for single-system tenants. See [Multi-System Landscapes](#multi-system-landscapes). |
 
 Variables can be set at either the **repository** or **organization** level.
 
@@ -137,6 +137,10 @@ Connect your solution from Joule Studio to the repository you just created, then
 2. Select **Run workflow**, choose the branch or tag you want to deploy, and start the workflow.
 
 Once the workflow completes successfully, the solution is live in the productive environment. 
+
+### Multi-System Landscapes
+
+By default, the pipeline deploys the solution to a single backend system. To deploy to multiple backend systems of different types (for example, both an S/4HANA Cloud system and an Ariba system), use the `TARGET_SYSTEMS` variable to specify the target system ID for each system type.Set the `TARGET_SYSTEMS` variable (see [Optional Variables](#optional-variables)) to a JSON object that maps each system type to the desired system ID. 
 
 ### Pipeline Structure
 

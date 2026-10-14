@@ -13,10 +13,7 @@ inputs:
     description: Base URL of the Joule Studio CLI API
     required: true
   targetSystems:
-    description: >
-      JSON object mapping system type to system ID for multi-system landscapes,
-      e.g. '{ "S/4HANA Cloud": "ABC123", "Ariba": "XYZ123" }'.
-      Leave empty for single-system tenants.
+    description: JSON object mapping system type to system ID for multi-system landscapes.
     required: false
 
 runs:
