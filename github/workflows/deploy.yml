@@ -6,7 +6,9 @@
 #   SCI_CLIENT_ID      - Client ID of the SCI application
 #   JOULE_STUDIO_URL   - Base URL of the Joule Studio solution handling API
 #   SCI_CLIENT_SECRET  - Client secret of the SCI application
-#   TARGET_SYSTEMS     - (Optional) JSON object mapping system type to system ID
+#
+# Optional variables (Settings > Secrets and variables > Actions > Variables):
+#   TARGET_SYSTEMS     - JSON object mapping system type to system ID
 #                        for multi-system landscapes, e.g. '{ "S/4HANA Cloud": "ABC123" }'
 #
 # Setup:
@@ -49,4 +51,4 @@ jobs:
         with:
           sciToken: ${{ steps.fetch-token.outputs.sciToken }}
           jouleStudioUrl: ${{ secrets.JOULE_STUDIO_URL }}
-          targetSystems: ${{ secrets.TARGET_SYSTEMS }}
+          targetSystems: ${{ vars.TARGET_SYSTEMS }}
