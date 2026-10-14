@@ -59,6 +59,7 @@ Authentication between GitLab CI and Joule Studio uses the OAuth 2.0 client cred
    - Select **Close** to dismiss the dialog
 
 > **Important:**
+>
 > - The client secret is displayed only once at creation time. If it is lost, you must generate a new secret.
 > - Before the secret expires, create a new secret and update the `SCI_CLIENT_ID` and `SCI_CLIENT_SECRET` variables in GitLab.
 > - Treat both the client ID and client secret as credentials: do not commit them to the repository, and store them only as secured pipeline variables (see Step 2).
@@ -84,12 +85,22 @@ Set the following variables at the **GitLab group level** under **Group > Settin
 
 > **How inheritance works:** A project inherits variables from its parent group. If a project does not set `SCI_CLIENT_SECRET`, its pipeline automatically uses the group-level value. If the same variable is set at both levels, the project-level value wins. For example, a leftover or empty project-level `SCI_CLIENT_SECRET` silently overrides the correct group value, and the token exchange fails with `invalid_client`.
 
-| Variable | Visibility | Description |
-|---|---|---|
-| `SCI_TENANT_URL` | Visible | Issuer URI of your SAP Cloud Identity Services tenant, e.g. `https://<your-tenant>.accounts.ondemand.com` |
-| `SCI_CLIENT_ID` | **Masked and hidden** | Client ID from the SCI application created in Step 1 |
-| `SCI_CLIENT_SECRET` | **Masked and hidden** | Client secret from the SCI application created in Step 1 |
-| `JOULE_STUDIO_URL` | Visible | Joule Studio Deploy Service URL. Get it from Joule Studio under **User Settings > Develop > CLI Sign-in URL** (omit any query parameters), e.g. `https://<your-tenant>.studio.joule.cloud.sap/cli/v1` |
+| Variable            | Visibility            | Description                                                                                                                                                                                           |
+| ------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SCI_TENANT_URL`    | Visible               | Issuer URI of your SAP Cloud Identity Services tenant, e.g. `https://<your-tenant>.accounts.ondemand.com`                                                                                             |
+| `SCI_CLIENT_ID`     | **Masked and hidden** | Client ID from the SCI application created in Step 1                                                                                                                                                  |
+| `SCI_CLIENT_SECRET` | **Masked and hidden** | Client secret from the SCI application created in Step 1                                                                                                                                              |
+| `JOULE_STUDIO_URL`  | Visible               | Joule Studio Deploy Service URL. Get it from Joule Studio under **User Settings > Develop > CLI Sign-in URL** (omit any query parameters), e.g. `https://<your-tenant>.studio.joule.cloud.sap/cli/v1` |
+
+### Optional Variables
+
+Optionally, set the following values under **GitLab group level** under **Group > Settings > CI/CD > Variables**. Use **Visible**, not other Visible Options.
+
+| Variable         | Visibility | Description                                                                                                 |
+| ---------------- | ---------- | ----------------------------------------------------------------------------------------------------------- |
+| `TARGET_SYSTEMS` | Visible    | JSON object mapping system type to system ID for multi-system landscapes. Ignore for single-system tenants. |
+
+<br>
 
 > **Important:** Mark `SCI_CLIENT_ID` and `SCI_CLIENT_SECRET` as **Masked and hidden** so their values are masked in job logs and cannot be read back from the GitLab UI after saving.
 >
@@ -137,12 +148,12 @@ Once the pipeline completes successfully, the solution is live in the productive
 
 **Build and deploy to Joule Studio** performs the following in order:
 
-| Phase | What it does |
-|---|---|
-| Setup CLI | Installs the `jl` CLI and prints its version |
+| Phase       | What it does                                                                                          |
+| ----------- | ----------------------------------------------------------------------------------------------------- |
+| Setup CLI   | Installs the `jl` CLI and prints its version                                                          |
 | Fetch token | Runs `.gitlab/scripts/fetch.py` to exchange the client credentials for a short-lived SCI access token |
-| Build | Runs `jl solution build` to validate and package the solution |
-| Deploy | Runs `jl solution deploy --force` to upload and deploy the solution |
+| Build       | Runs `jl solution build` to validate and package the solution                                         |
+| Deploy      | Runs `jl solution deploy --force` to upload and deploy the solution                                   |
 
 ---
 
