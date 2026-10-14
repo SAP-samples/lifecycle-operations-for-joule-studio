@@ -97,7 +97,7 @@ Optionally, set the following values under **Repository settings > Pipelines > R
 
 | Variable | Secured | Description |
 |---|---|---|
-| `TARGET_SYSTEMS` | No | JSON object mapping system type to system ID for multi-system landscapes. Ignore for single-system tenants. See [Multi-System Landscapes](#multi-system-landscapes). |
+| `TARGET_SYSTEMS` | No | JSON object mapping system type to system ID for multi-system landscapes. Ignore for single-system tenants. |
 
 Variables can be set at either the **repository** or **workspace** level.
 
