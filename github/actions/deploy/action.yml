@@ -12,6 +12,12 @@ inputs:
   jouleStudioUrl:
     description: Base URL of the Joule Studio CLI API
     required: true
+  targetSystems:
+    description: >
+      JSON object mapping system type to system ID for multi-system landscapes,
+      e.g. '{ "S/4HANA Cloud": "ABC123", "Ariba": "XYZ123" }'.
+      Leave empty for single-system tenants.
+    required: false
 
 runs:
   using: composite
@@ -22,6 +28,11 @@ runs:
         JOULE_STUDIO_TOKEN: ${{ inputs.sciToken }}
         JOULE_STUDIO_HOST: ${{ inputs.jouleStudioUrl }}
         SOLUTION_PATH: ${{ inputs.path }}
+        TARGET_SYSTEMS: ${{ inputs.targetSystems }}
       run: |
         cd "$SOLUTION_PATH"
-        jl solution deploy --force
+        if [ -n "$TARGET_SYSTEMS" ]; then
+          jl solution deploy --force --systems "$TARGET_SYSTEMS"
+        else
+          jl solution deploy --force
+        fi
