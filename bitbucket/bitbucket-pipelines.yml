@@ -63,7 +63,8 @@ pipelines:
               echo "Building solution..."
               output=$(jl solution build 2>&1)
               echo "$output"
-              zip_file=$(echo "$output" | grep "Location:" | sed 's/.*Location: //')
+              zip_file=$(echo "$output" | grep "Location:" || true)
+              zip_file=$(echo "$zip_file" | sed 's/.*Location: //')
               if [ -z "$zip_file" ]; then
                 echo "Error: could not determine zip file location from jl output"
                 exit 1
@@ -76,8 +77,24 @@ pipelines:
 
               echo "Deploying solution to Joule Studio..."
 
+              # Build deploy command with optional --systems flag
+              DEPLOY_CMD="jl solution deploy --force"
+
+              if [ -n "${TARGET_SYSTEMS:-}" ]; then
+                echo "Backend systems configuration provided: $TARGET_SYSTEMS"
+                # Escape double quotes in JSON for eval
+                ESCAPED_SYSTEMS=$(printf '%s' "$TARGET_SYSTEMS" | sed 's/"/\\"/g')
+                DEPLOY_CMD="$DEPLOY_CMD --systems \"$ESCAPED_SYSTEMS\""
+
+                # Test: echo the final command to verify parameter handling
+                echo "DEBUG: Final deploy command will be:"
+                echo "$DEPLOY_CMD"
+              else
+                echo "No TARGET_SYSTEMS provided, deploying without --systems flag"
+              fi
+
               # Current CLI builds and deploys the solution from the current directory.
-              if ! jl solution deploy --force; then
+              if ! eval "$DEPLOY_CMD"; then
                 echo "Joule Studio deployment failed."
                 exit 1
               fi
