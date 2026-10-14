@@ -90,6 +90,16 @@ Set the following values at the **organization level**, under **Settings > Secre
 
 > **Important:** For each secret, set **Repository access** to **Selected repositories** and select only the repositories that are allowed to deploy. If the repository does not exist yet, add it to each secret's access list after creating it in Step 3.
 
+### Optional Variables
+
+Optionally, set the following values under **Settings > Secrets and variables > Actions > Variables**. Use **Variables**, not **Secrets** .
+
+| Variable | Description |
+|---|---|
+| `TARGET_SYSTEMS` | JSON object mapping system type to system ID for multi-system landscapes, e.g. `{ "S/4HANA Cloud": "ABC123", "Ariba": "XYZ123" }`. Omit for single-system tenants. See [Multi-System Landscapes](#multi-system-landscapes). |
+
+Variables can be set at either the **repository** or **organization** level.
+
 ---
 
 ## Step 3: Create a GitHub Repository and Connect Your Solution
