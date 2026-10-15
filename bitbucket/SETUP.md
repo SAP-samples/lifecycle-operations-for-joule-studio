@@ -91,6 +91,16 @@ Set the following variables at the **repository level**, under **Repository sett
 
 > **Important:** Mark `SCI_CLIENT_ID` and `SCI_CLIENT_SECRET` as **Secured** so their values are masked in the build logs and cannot be read back from the Bitbucket UI.
 
+### Optional Variables
+
+Optionally, set the following values under **Repository settings > Pipelines > Repository variables**. Use **Variables**, not **Secured**.
+
+| Variable | Secured | Description |
+|---|---|---|
+| `TARGET_SYSTEMS` | No | JSON object mapping system type to system ID for multi-system landscapes. Ignore for single-system tenants. |
+
+Variables can be set at either the **repository** or **workspace** level.
+
 ---
 
 ## Step 3: Create a Bitbucket Repository and Connect Your Solution
@@ -147,4 +157,4 @@ Once the pipeline completes successfully, the solution is live in the productive
 
 ---
 
-**Last Updated:** 2026-09-09
+**Last Updated:** 2026-10-14
