@@ -1,4 +1,5 @@
 # lifecycle-operations-for-joule-studio
+[![REUSE status](https://api.reuse.software/badge/github.com/SAP-samples/lifecycle-operations-for-joule-studio)](https://api.reuse.software/info/github.com/SAP-samples/lifecycle-operations-for-joule-studio)
 
 This repository contains the reference pipeline configurations and setup guides for promoting Joule Studio solutions from a Development tenant to a Production tenant via a git provider.
 
