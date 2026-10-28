@@ -129,14 +129,15 @@ jobs:
             exit 1
           fi
 
-          if [ ! -f ".build" ]; then
-            echo "##vso[task.logissue type=error].build file not found - required for deployment"
+          echo "Building solution..."
+          if ! jl solution build; then
+            echo "##vso[task.logissue type=error]Solution build failed"
             exit 1
           fi
 
           echo "Deploying solution to Joule Studio..."
 
-          if ! jl solution deploy --force; then
+          if ! CI=true jl solution deploy --force; then
             echo "##vso[task.logissue type=error]Joule Studio deployment failed"
             exit 1
           fi
