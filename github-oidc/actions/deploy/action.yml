@@ -24,6 +24,7 @@ runs:
       env:
         JOULE_STUDIO_TOKEN: ${{ inputs.sciToken }}
         JOULE_STUDIO_HOST: ${{ inputs.jouleStudioUrl }}
+        SOLUTION_PATH: ${{ inputs.path }}
       run: |
-        cd "${{ inputs.path }}"
+        cd -- "$SOLUTION_PATH"
         jl solution deploy --force
